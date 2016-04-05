@@ -1,0 +1,5 @@
+define foo(a b) -> 2 * a + b
+
+define pi -> 3.14159
+
+define main() -> print(pi * foo(1,2,),)
