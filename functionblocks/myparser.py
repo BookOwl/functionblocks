@@ -17,7 +17,7 @@ from grako.parsing import graken, Parser
 from grako.util import re, RE_FLAGS
 
 
-__version__ = (2016, 4, 5, 15, 13, 26, 1)
+__version__ = (2016, 4, 6, 15, 48, 41, 2)
 
 __all__ = [
     'grammerParser',
@@ -28,9 +28,9 @@ __all__ = [
 
 class grammerParser(Parser):
     def __init__(self,
-                 whitespace=None,
+                 whitespace=re.compile('[\\t ]+', RE_FLAGS | re.DOTALL),
                  nameguard=None,
-                 comments_re=None,
+                 comments_re='{\\-.*?\\-}',
                  eol_comments_re=None,
                  ignorecase=None,
                  left_recursion=True,
@@ -71,7 +71,7 @@ class grammerParser(Parser):
 
     @graken()
     def _name_(self):
-        self._pattern(r'[a-zA-Z_][a-zA-Z0-9_]*')
+        self._pattern(r'(?!if)(?!then)(?!else)(?!do)(?!end)[a-zA-Z_][a-zA-Z0-9_]*')
         self.ast['name'] = self.last_node
 
         self.ast._define(
@@ -189,9 +189,11 @@ class grammerParser(Parser):
     def _do_(self):
         with self._group():
             self._token('do')
+            self._pattern(r'\n')
 
             def block1():
                 self._expr_()
+                self._pattern(r'\n')
             self._positive_closure(block1)
 
             self._token('end')
