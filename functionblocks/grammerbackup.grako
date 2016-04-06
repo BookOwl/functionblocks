@@ -1,21 +1,23 @@
 # grammerbackup.grako
+@@whitespace :: /[\t ]+/ 
+@@comments :: /{\-.*?\-}/
 
 int = /[\-+0-9]+/ ;
 float = /[\-+0-9]+\.[0-9]+/ ;
-number = float | int ;
+number = number:(float | int) ;
 
-name = /[a-zA-Z_][a-zA-Z0-9_]*/ ;
+name = name: /(?!if)(?!then)(?!else)(?!do)(?!end)[a-zA-Z_][a-zA-Z0-9_]*/ ;
 
-call = name "(" { expr "," } ")" ;
+call = call:(name "(" { expr "," } ")") ;
 
-funcdef = "define" name "(" { name } ")" "->" expr ;
-valdef = "define" name "->" expr ;
-define = funcdef | valdef ;
+funcdef = funcdef:("define" name "(" { name } ")" "->" expr) ;
+valdef = valdef:("define" name "->" expr) ;
+define = @:funcdef | @:valdef ;
 
-binop = expr ("+" | "-" | "*" | "/" | "=" | "!=") expr ;
-if = "if" expr "then" expr "else" expr ;
-do = "do" {expr}+ "end" ;
-special = if | do ;
-expr = special | call | binop | number | name ;
+binop = binop:(expr ("+" | "-" | "*" | "/" | "=" | "!=") expr) ;
+if = if:("if" expr "then" expr "else" expr) ;
+do = do:("do" /\n/ {expr /\n/}+ "end") ;
+special = @:if | @:do ;
+expr = @:special | @:call | @:binop | @:number | @:name ;
 
 program = { define }+ ;

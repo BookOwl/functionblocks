@@ -17,7 +17,7 @@ from grako.parsing import graken, Parser
 from grako.util import re, RE_FLAGS
 
 
-__version__ = (2016, 4, 6, 15, 48, 41, 2)
+__version__ = (2016, 4, 6, 20, 49, 58, 2)
 
 __all__ = [
     'grammerParser',
@@ -62,22 +62,25 @@ class grammerParser(Parser):
                 with self._option():
                     self._int_()
                 self._error('no available options')
-        self.ast['number'] = self.last_node
-
-        self.ast._define(
-            ['number'],
-            []
-        )
 
     @graken()
     def _name_(self):
         self._pattern(r'(?!if)(?!then)(?!else)(?!do)(?!end)[a-zA-Z_][a-zA-Z0-9_]*')
-        self.ast['name'] = self.last_node
 
-        self.ast._define(
-            ['name'],
-            []
-        )
+    @graken()
+    def _string_(self):
+        self._pattern(r'".*?"')
+
+    @graken()
+    def _literal_(self):
+        with self._choice():
+            with self._option():
+                self._number_()
+            with self._option():
+                self._name_()
+            with self._option():
+                self._string_()
+            self._error('no available options')
 
     @graken()
     def _call_(self):
@@ -85,17 +88,11 @@ class grammerParser(Parser):
             self._name_()
             self._token('(')
 
-            def block1():
+            def block0():
                 self._expr_()
                 self._token(',')
-            self._closure(block1)
+            self._closure(block0)
             self._token(')')
-        self.ast['call'] = self.last_node
-
-        self.ast._define(
-            ['call'],
-            []
-        )
 
     @graken()
     def _funcdef_(self):
@@ -104,18 +101,12 @@ class grammerParser(Parser):
             self._name_()
             self._token('(')
 
-            def block1():
+            def block0():
                 self._name_()
-            self._closure(block1)
+            self._closure(block0)
             self._token(')')
             self._token('->')
             self._expr_()
-        self.ast['funcdef'] = self.last_node
-
-        self.ast._define(
-            ['funcdef'],
-            []
-        )
 
     @graken()
     def _valdef_(self):
@@ -124,12 +115,6 @@ class grammerParser(Parser):
             self._name_()
             self._token('->')
             self._expr_()
-        self.ast['valdef'] = self.last_node
-
-        self.ast._define(
-            ['valdef'],
-            []
-        )
 
     @graken()
     def _define_(self):
@@ -144,30 +129,70 @@ class grammerParser(Parser):
 
     @graken()
     def _binop_(self):
-        with self._group():
-            self._expr_()
-            with self._group():
-                with self._choice():
-                    with self._option():
-                        self._token('+')
-                    with self._option():
-                        self._token('-')
-                    with self._option():
-                        self._token('*')
-                    with self._option():
-                        self._token('/')
-                    with self._option():
-                        self._token('=')
-                    with self._option():
-                        self._token('!=')
-                    self._error('expecting one of: != * + - / =')
-            self._expr_()
-        self.ast['binop'] = self.last_node
+        self._p1_()
 
-        self.ast._define(
-            ['binop'],
-            []
-        )
+        def block0():
+            with self._choice():
+                with self._option():
+                    self._token('=')
+                    self._p1_()
+                with self._option():
+                    self._token('>')
+                    self._p1_()
+                with self._option():
+                    self._token('<')
+                    self._p1_()
+                with self._option():
+                    self._token('!=')
+                    self._p1_()
+                self._error('no available options')
+        self._closure(block0)
+
+    @graken()
+    def _p1_(self):
+        self._p2_()
+
+        def block0():
+            with self._choice():
+                with self._option():
+                    self._token('+')
+                    self._p2_()
+                with self._option():
+                    self._token('-')
+                    self._p2_()
+                self._error('no available options')
+        self._closure(block0)
+
+    @graken()
+    def _p2_(self):
+        self._p3_()
+
+        def block0():
+            with self._choice():
+                with self._option():
+                    self._token('*')
+                    self._p3_()
+                with self._option():
+                    self._token('/')
+                    self._p3_()
+                self._error('no available options')
+        self._closure(block0)
+
+    @graken()
+    def _p3_(self):
+        with self._choice():
+            with self._option():
+                self._special_()
+            with self._option():
+                self._call_()
+            with self._option():
+                self._literal_()
+            with self._option():
+                self._token('(')
+                self._binop_()
+                self.ast['@'] = self.last_node
+                self._token(')')
+            self._error('no available options')
 
     @graken()
     def _if_(self):
@@ -178,12 +203,6 @@ class grammerParser(Parser):
             self._expr_()
             self._token('else')
             self._expr_()
-        self.ast['if_'] = self.last_node
-
-        self.ast._define(
-            ['if'],
-            []
-        )
 
     @graken()
     def _do_(self):
@@ -191,18 +210,12 @@ class grammerParser(Parser):
             self._token('do')
             self._pattern(r'\n')
 
-            def block1():
+            def block0():
                 self._expr_()
                 self._pattern(r'\n')
-            self._positive_closure(block1)
+            self._positive_closure(block0)
 
             self._token('end')
-        self.ast['do'] = self.last_node
-
-        self.ast._define(
-            ['do'],
-            []
-        )
 
     @graken()
     def _special_(self):
@@ -228,10 +241,7 @@ class grammerParser(Parser):
                 self._binop_()
                 self.ast['@'] = self.last_node
             with self._option():
-                self._number_()
-                self.ast['@'] = self.last_node
-            with self._option():
-                self._name_()
+                self._literal_()
                 self.ast['@'] = self.last_node
             self._error('no available options')
 
@@ -256,6 +266,12 @@ class grammerSemantics(object):
     def name(self, ast):
         return ast
 
+    def string(self, ast):
+        return ast
+
+    def literal(self, ast):
+        return ast
+
     def call(self, ast):
         return ast
 
@@ -269,6 +285,15 @@ class grammerSemantics(object):
         return ast
 
     def binop(self, ast):
+        return ast
+
+    def p1(self, ast):
+        return ast
+
+    def p2(self, ast):
+        return ast
+
+    def p3(self, ast):
         return ast
 
     def if_(self, ast):

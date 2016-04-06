@@ -2,5 +2,6 @@
 define fact(n) -> if n = 1 then 1 else n * fact(n - 1,)
 define main() -> do
 say()
+say(1 + 2 * (5 - 3),)
 say(fact(5,),)
 end
