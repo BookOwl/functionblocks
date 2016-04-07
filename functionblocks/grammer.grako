@@ -4,28 +4,28 @@
 
 int = /[\-+0-9]+/ ;
 float = /[\-+0-9]+\.[0-9]+/ ;
-number = (float | int) ;
+number = number:(float | int) ;
 
-name =  /(?!if)(?!then)(?!else)(?!do)(?!end)[a-zA-Z_][a-zA-Z0-9_]*/ ;
+name = name: /(?!if)(?!then)(?!else)(?!do)(?!end)[a-zA-Z_][a-zA-Z0-9_]*/ ;
 
-string =  /".*?"/ ;
+string = string: /".*?"/ ;
 
 literal = number | name | string ;
 
-call = (name "(" { expr "," } ")") ;
+call = call:(name "(" { expr "," } ")") ;
 
-funcdef = ("define" name "(" { name } ")" "->" expr) ;
-valdef = ("define" name "->" expr) ;
+funcdef = funcdef:("define" name "(" { name } ")" "->" expr) ;
+valdef = valdef:("define" name "->" expr) ;
 define = @:funcdef | @:valdef ;
 
-binop = p1 { "=" p1 | ">" p1 | "<" p1 | "!=" p1  } ;
-p1 = p2 { "+" p2 | "-" p2  } ;
-p2 = p3 { "*" p3 | "/" p3 } ;
-p3 = special | call | literal | "(" @:binop ")" ;
+binop = p1 [{ "=" p1 | ">" p1 | "<" p1 | "!=" p1 }+] ;
+p1 = p2 [{ "+" p2 | "-" p2 }+] ;
+p2 = p3 [{ "*" p3 | "/" p3 }+] ;
+p3 = @:special | @:call | @:literal | "(" @:binop ")" ;
 
-if = ("if" expr "then" expr "else" expr) ;
-do = ("do" /\n/ {expr /\n/}+ "end") ;
+if = if:("if" expr "then" expr "else" expr) ;
+do = do:("do" /\n/ {expr /\n/}+ "end") ;
 special = @:if | @:do ;
-expr = @:special | @:call | @:binop | @:literal ;
 
+expr = binop ;
 program = { define }+ ;
