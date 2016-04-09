@@ -1,0 +1,32 @@
+{
+  "name": "functionblocks",
+  "version": "0.0.1",
+  "description": "A functional programming language that compiles to .sb2",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BookOwl/functionblocks.git"
+  },
+  "keywords": [
+    "function",
+    "programming",
+    "language",
+    "sb2",
+    "scratch"
+  ],
+  "author": "Matthew <stanleybookowl@gmail.com> (http://bookowl.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BookOwl/functionblocks/issues"
+  },
+  "homepage": "https://github.com/BookOwl/functionblocks#readme",
+  "dependencies": {
+    "nearley": "^2.4.1"
+  },
+  "devDependencies": {
+    "collapsable": "^1.0.0"
+  }
+}
